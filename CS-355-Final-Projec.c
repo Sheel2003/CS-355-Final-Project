@@ -4,13 +4,14 @@
 #include <curses.h>
 #include <signal.h>
 
-#define HEIGHT 25 // Adjusted height to utilize all available space
-#define WIDTH 60  // Adjusted width to utilize all available space
-
 int snakeX[100], snakeY[100], snakeLength, fruitX, fruitY, score;
 char direction;
 
 void draw() {
+    int maxY, maxX;
+    getmaxyx(stdscr, maxY, maxX); // Get terminal size
+    maxY -= 7;
+    maxX -= 3;
     clear();
     printw("Welcome to the Snake Game!\n");
     printw("Score: %d\n", score);
@@ -18,11 +19,11 @@ void draw() {
     printw("Use arrow keys to control the snake.\n");
     printw("Press 'Ctrl + C' to exit.\n");
     printw("+"); // Top-left corner of border
-    for (int i = 0; i < WIDTH; i++) printw("-");
+    for (int i = 0; i < maxX; i++) printw("-");
     printw("+\n");
-    for (int i = 0; i < HEIGHT; i++) {
+    for (int i = 0; i < maxY; i++) {
         printw("|"); // Left border
-        for (int j = 0; j < WIDTH; j++) {
+        for (int j = 0; j < maxX; j++) {
             if (i == snakeX[0] && j == snakeY[0])
                 printw("0"); // Snake head
             else if (i == fruitX && j == fruitY)
@@ -43,7 +44,7 @@ void draw() {
         printw("|\n"); // Right border
     }
     printw("+"); // Bottom-left corner of border
-    for (int i = 0; i < WIDTH; i++) printw("-");
+    for (int i = 0; i < maxX; i++) printw("-");
     printw("+\n");
     refresh();
 }
@@ -92,7 +93,11 @@ void moveSnake() {
 }
 
 void checkCollision() {
-    if (snakeX[0] == 0 || snakeX[0] == HEIGHT - 1 || snakeY[0] == 0 || snakeY[0] == WIDTH - 1) {
+    int maxY, maxX;
+    getmaxyx(stdscr, maxY, maxX); // Get terminal size
+    maxY -= 7;
+    maxX -= 3;
+    if (snakeX[0] == 0 || snakeX[0] == maxY - 1 || snakeY[0] == 0 || snakeY[0] == maxX - 1) {
         endwin();
         printf("Game Over! Final Score: %d\n", score);
         exit(0);
@@ -107,8 +112,8 @@ void checkCollision() {
     if (snakeX[0] == fruitX && snakeY[0] == fruitY) {
         score++;
         snakeLength++;
-        fruitX = rand() % (HEIGHT - 2) + 1;
-        fruitY = rand() % (WIDTH - 2) + 1;
+        fruitX = rand() % (maxY - 2) + 1;
+        fruitY = rand() % (maxX - 2) + 1;
     }
 }
 
@@ -128,17 +133,22 @@ int main() {
 
     signal(SIGINT, cleanup); // Signal handling for Ctrl + C
 
+    int maxY, maxX;
+    getmaxyx(stdscr, maxY, maxX); // Get terminal size
+    maxY -= 7;
+    maxX -= 3;
+
     snakeLength = 5; // Initial length set to five characters
     direction = rand() % 4; // Random initial direction: 0-UP, 1-DOWN, 2-LEFT, 3-RIGHT
-    snakeX[0] = HEIGHT / 2;
-    snakeY[0] = WIDTH / 2;
+    snakeX[0] = maxY / 2;
+    snakeY[0] = maxX / 2;
 
     srand(time(NULL));
-    fruitX = rand() % (HEIGHT - 2) + 1;
-    fruitY = rand() % (WIDTH - 2) + 1;
+    fruitX = rand() % (maxY - 2) + 1;
+    fruitY = rand() % (maxX - 2) + 1;
     score = 0;
 
-    int perimeter = 2 * (HEIGHT - 1) + 2 * (WIDTH - 1); // Perimeter of the border
+    int perimeter = 2 * (maxY - 1) + 2 * (maxX - 1); // Perimeter of the border
 
     while(1) {
         draw();
