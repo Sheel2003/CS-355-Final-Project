@@ -91,7 +91,8 @@ void moveSnake() {
 }
 
 void checkCollision() {
-    if (snakeX[0] == 0 || snakeX[0] == MAXY - 1 || snakeY[0] == 0 || snakeY[0] == MAXX - 1) {
+    // Adjusted for borders
+    if (snakeX[0] == -1 || snakeX[0] == MAXY || snakeY[0] == -1 || snakeY[0] == MAXX) {
         endwin();
         printf("Game Over! Final Score: %d\n", score);
         exit(0);
