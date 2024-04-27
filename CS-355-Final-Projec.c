@@ -4,7 +4,7 @@
 #include <curses.h>
 #include <signal.h>
 
-#define LENGTH 100
+#define LENGTH 1000
 
 int snakeX[LENGTH], snakeY[LENGTH], snakeLength, fruitX, fruitY, score, MAXY, MAXX;
 char direction;
@@ -47,25 +47,44 @@ void draw() {
     refresh();
 }
 
+void gameOver(int signal) {
+    endwin();
+    printf("Game Over! Final Score: %d\n", score);
+    exit(0);
+}
+
 void input() {
     int ch = getch(); // Use int instead of char to handle arrow keys
     switch(ch) {
         case KEY_UP:
             if (direction != 1) direction = 0; // Change direction to UP if not already moving DOWN
+            else {
+                gameOver(0);
+            }
             break;
         case KEY_DOWN:
             if (direction != 0) direction = 1; // Change direction to DOWN if not already moving UP
+            else {
+                gameOver(0);
+            }
             break;
         case KEY_LEFT:
             if (direction != 3) direction = 2; // Change direction to LEFT if not already moving RIGHT
+            else {
+                gameOver(0);
+            }
             break;
         case KEY_RIGHT:
             if (direction != 2) direction = 3; // Change direction to RIGHT if not already moving LEFT
+            else {
+                gameOver(0);
+            }
             break;
         default:
             break;
     }
 }
+
 
 void moveSnake() {
     for (int i = snakeLength - 1; i > 0; i--) {
@@ -93,29 +112,21 @@ void moveSnake() {
 void checkCollision() {
     // Adjusted for borders
     if (snakeX[0] == -1 || snakeX[0] == MAXY || snakeY[0] == -1 || snakeY[0] == MAXX) {
-        endwin();
-        printf("Game Over! Final Score: %d\n", score);
-        exit(0);
+        gameOver(0);
     }
+    // Checks if the snake runs into itself
     for (int i = 1; i < snakeLength; i++) {
         if (snakeX[0] == snakeX[i] && snakeY[0] == snakeY[i]) {
-            endwin();
-            printf("Game Over! Final Score: %d\n", score);
-            exit(0);
+            gameOver(0);
         }
     }
+    // Checks if the snake collides with fruit
     if (snakeX[0] == fruitX && snakeY[0] == fruitY) {
         score++;
         snakeLength++;
         fruitX = rand() % (MAXY - 2) + 1;
         fruitY = rand() % (MAXX - 2) + 1;
     }
-}
-
-void cleanup(int signal) {
-    endwin();
-    printf("Exiting the game. Final Score: %d\n", score);
-    exit(0);
 }
 
 int main() {
@@ -126,7 +137,7 @@ int main() {
     keypad(stdscr, TRUE);
     timeout(500); // Initial timeout value
 
-    signal(SIGINT, cleanup); // Signal handling for Ctrl + C
+    signal(SIGINT, gameOver); // Signal handling for Ctrl + C
 
     getmaxyx(stdscr, MAXY, MAXX); // Get terminal size
     MAXY -= 7; // Smallest numbers that work for me
@@ -151,7 +162,7 @@ int main() {
         checkCollision();
         
         // Adjust snake speed based on its length
-        timeout(200 - (snakeLength * 10 / (perimeter / 2)));
+        timeout(100);
     }
 
     endwin();
