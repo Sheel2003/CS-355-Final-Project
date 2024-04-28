@@ -3,16 +3,18 @@
 #include <time.h>
 #include <curses.h>
 #include <signal.h>
+#include <unistd.h>
 
 #define LENGTH 1000
 
-int snakeX[LENGTH], snakeY[LENGTH], snakeLength, fruitX, fruitY, score, MAXY, MAXX;
+int snakeX[LENGTH], snakeY[LENGTH], snakeLength, trophy, trophyX, trophyY, MAXY, MAXX;
 char direction;
+time_t trophyExpiration;
 
 void draw() {
     clear();
     printw("Welcome to the Snake Game!\n");
-    printw("Score: %d\n", score);
+    printw("Score: %d\n", snakeLength);
     printw("Instructions:\n");
     printw("Use arrow keys to control the snake.\n");
     printw("Press 'Ctrl + C' to exit.\n");
@@ -24,8 +26,8 @@ void draw() {
         for (int j = 0; j < MAXX; j++) {
             if (i == snakeX[0] && j == snakeY[0])
                 printw("0"); // Snake head
-            else if (i == fruitX && j == fruitY)
-                printw("*"); // Fruit
+            else if (i == trophyX && j == trophyY)
+                printw("%d", trophy); // Fruit
             else {
                 int isSnakeBody = 0;
                 for (int k = 1; k < snakeLength; k++) {
@@ -49,8 +51,24 @@ void draw() {
 
 void gameOver(int signal) {
     endwin();
-    printf("Game Over! Final Score: %d\n", score);
+    printf("Game Over! Final Score: %d\n", snakeLength);
     exit(0);
+}
+
+int generateTrophy() {
+    int newTrophy = (rand() % 9) + 1;
+    int maxDistance = 15; // Maximum distance from the snake
+
+    // Generate trophy position within the specified range
+    do {
+        trophyX = (rand() % (MAXY - 2)) + 1; // Generate random X position within screen bounds
+        trophyY = (rand() % (MAXX - 2)) + 1; // Generate random Y position within screen bounds
+    } while (abs(trophyX - snakeX[0]) > maxDistance || abs(trophyY - snakeY[0]) > maxDistance); // Ensure trophy is within maxDistance from the snake
+
+    time_t currentTime;
+    time(&currentTime);
+    trophyExpiration = currentTime + (rand() % 9 + 1);
+    return newTrophy;
 }
 
 void input() {
@@ -120,13 +138,17 @@ void checkCollision() {
             gameOver(0);
         }
     }
-    // Checks if the snake collides with fruit
-    if (snakeX[0] == fruitX && snakeY[0] == fruitY) {
-        score++;
-        snakeLength++;
-        fruitX = rand() % (MAXY - 2) + 1;
-        fruitY = rand() % (MAXX - 2) + 1;
+    // Checks if the snake collides with trophy
+    if (snakeX[0] == trophyX && snakeY[0] == trophyY) {
+
+        snakeLength += trophy;
+        trophy = generateTrophy();
     }
+    // Checks if the trophy has been
+    time_t currentTime;
+    time(&currentTime);
+    if (currentTime >= trophyExpiration)
+        trophy = generateTrophy();
 }
 
 int main() {
@@ -149,11 +171,9 @@ int main() {
     snakeY[0] = MAXX / 2;
 
     srand(time(NULL));
-    fruitX = rand() % (MAXY - 2) + 1;
-    fruitY = rand() % (MAXX - 2) + 1;
-    score = 0;
+    trophy = generateTrophy();
 
-    int perimeter = 2 * (MAXY - 1) + 2 * (MAXX - 1); // Perimeter of the border
+    int halfPerimeter = (MAXY - 1) + (MAXX - 1); // Perimeter of the border
 
     while(1) {
         draw();
@@ -162,9 +182,16 @@ int main() {
         checkCollision();
         
         // Adjust snake speed based on its length
-        timeout(100);
-    }
+        int speed = halfPerimeter - snakeLength;
+        if (speed > 20)
+            timeout(speed);
+        else
+         timeout(20);
 
-    endwin();
-    return 0;
+        if (snakeLength >= halfPerimeter){
+            endwin();
+            printf("You Win! Max Length Reached On Your Screen: %d\n", snakeLength);
+            exit(0);
+        }
+    }
 }
