@@ -10,6 +10,7 @@
 int snakeX[LENGTH], snakeY[LENGTH], snakeLength, trophy, trophyX, trophyY, MAXY, MAXX;
 char direction;
 time_t trophyExpiration;
+bool paused = false;
 
 int isTrophyOnSnake() {
     for (int i = 0; i < snakeLength; i++) {
@@ -90,27 +91,26 @@ void input() {
     switch(ch) {
         case KEY_UP:
             if (direction != 1) direction = 0; // Change direction to UP if not already moving DOWN
-            else {
+            else
                 gameOver(0);
-            }
             break;
         case KEY_DOWN:
             if (direction != 0) direction = 1; // Change direction to DOWN if not already moving UP
-            else {
+            else
                 gameOver(0);
-            }
             break;
         case KEY_LEFT:
             if (direction != 3) direction = 2; // Change direction to LEFT if not already moving RIGHT
-            else {
+            else
                 gameOver(0);
-            }
             break;
         case KEY_RIGHT:
             if (direction != 2) direction = 3; // Change direction to RIGHT if not already moving LEFT
-            else {
+            else
                 gameOver(0);
-            }
+            break;
+        case 'p':
+            paused = !paused; // Toggle pause state
             break;
         default:
             break;
@@ -200,23 +200,46 @@ int main() {
     drawStatic(); // Draw static elements at the start of the game
 
     while(1) {
-        drawDynamic(); // Draw dynamic elements (snake and trophies)
-        input();
-        moveSnake();
-        checkCollision();
-        refresh();
-        
-        // Adjust snake speed based on its length
-        int speed = halfPerimeter - snakeLength;
-        if (speed > 20)
-            timeout(speed);
-        else
-            timeout(20);
+        if (!paused) {
+            drawDynamic(); // Draw dynamic elements (snake and trophies)
+            input();
+            moveSnake();
+            checkCollision();
+            refresh();
+            
+            // Adjust snake speed based on its length
+            int speed = halfPerimeter - snakeLength;
+            if (speed > 20)
+                timeout(speed);
+            else
+                timeout(20);
 
-        if (snakeLength >= halfPerimeter){
-            endwin();
-            printf("You Win! Max Length Reached On Your Screen: %d\n", halfPerimeter);
-            exit(0);
+            if (snakeLength >= halfPerimeter){
+                endwin();
+                printf("You Win! Max Length Reached On Your Screen: %d\n", halfPerimeter);
+                exit(0);
+            }
+        }
+        else {
+            // Display a message indicating that the game is paused
+            int middleX = (MAXX - 12 - 5) / 2;
+            // Colors not working right //
+            //start_color();
+            //init_pair(1, COLOR_RED, COLOR_BLACK);
+            //attron(COLOR_PAIR(1));
+            mvprintw(5, (MAXX - 12 - 5) / 2, "Game Paused");
+            //attroff(COLOR_PAIR(1));
+            refresh();
+            while (1) {
+                if (getch() == 'p') {
+                    paused = false;
+                    //clear(); // Clear the screen before redrawing
+                    //drawStatic(); // Redraw static elements
+                    mvprintw(5, (MAXX - 12 - 5) / 2, "-----------");
+                    break;
+                }
+
+            }
         }
     }
 }
