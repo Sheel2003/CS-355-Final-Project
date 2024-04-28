@@ -11,19 +11,28 @@ int snakeX[LENGTH], snakeY[LENGTH], snakeLength, trophy, trophyX, trophyY, MAXY,
 char direction;
 time_t trophyExpiration;
 
+int isTrophyOnSnake() {
+    for (int i = 0; i < snakeLength; i++) {
+        if (trophyX == snakeX[i] && trophyY == snakeY[i]) {
+            return 1; // Trophy is on the snake
+        }
+    }
+    return 0; // Trophy is not on the snake
+}
+
 int generateTrophy() {
     int newTrophy = (rand() % 9) + 1;
     int maxDistance = 15; // Maximum distance from the snake
 
     // Generate trophy position within the specified range
     do {
-        trophyX = (rand() % (MAXY - 2)) + 1; // Generate random X position within screen bounds
-        trophyY = (rand() % (MAXX - 2)) + 1; // Generate random Y position within screen bounds
-    } while (abs(trophyX - snakeX[0]) > maxDistance || abs(trophyY - snakeY[0]) > maxDistance); // Ensure trophy is within maxDistance from the snake
+        trophyX = (rand() % (MAXY - 7)) + 6; // Generate random X position within screen bounds
+        trophyY = (rand() % (MAXX - 3)) + 1; // Generate random Y position within screen bounds
+    } while (abs(trophyX - snakeX[0]) > maxDistance || abs(trophyY - snakeY[0]) > maxDistance || isTrophyOnSnake());
 
     time_t currentTime;
     time(&currentTime);
-    trophyExpiration = currentTime + (rand() % 9 + 1);
+    trophyExpiration = currentTime + (rand() % 9) + 1;
     return newTrophy;
 }
 
@@ -34,17 +43,19 @@ void drawStatic() {
     printw("Use arrow keys to control the snake.\n");
     printw("Press 'Ctrl + C' to exit.\n");
     printw("+"); // Top-left corner of border
-    for (int i = 0; i < MAXX; i++) printw("-");
+    for (int i = 3; i < MAXX; i++)
+        printw("-");
     printw("+\n");
-    for (int i = 0; i < MAXY; i++) {
+    for (int i = 7; i < MAXY; i++) {
         printw("|"); // Left border
-        for (int j = 0; j < MAXX; j++) {
+        for (int j = 3; j < MAXX; j++) {
             printw(" ");
         }
         printw("|\n"); // Right border
     }
     printw("+"); // Bottom-left corner of border
-    for (int i = 0; i < MAXX; i++) printw("-");
+    for (int i = 3; i < MAXX; i++)
+        printw("-");
     printw("+\n");
 }
 
@@ -62,7 +73,7 @@ void drawDynamic() {
     }
 
     // Draw the score
-    mvprintw(0, MAXX + 2, "Score: %d", snakeLength);
+    mvprintw(1, 0, "Score: %d", snakeLength);
 
     // Refresh the screen to apply changes
     refresh();
@@ -132,7 +143,7 @@ void moveSnake() {
 
 void checkCollision() {
     // Adjusted for borders
-    if (snakeX[0] == -1 || snakeX[0] == MAXY || snakeY[0] == -1 || snakeY[0] == MAXX) {
+    if (snakeX[0] == 5 || snakeX[0] == MAXY - 1 || snakeY[0] == 0 || snakeY[0] == MAXX - 2) {
         gameOver(0);
     }
     // Checks if the snake runs into itself
@@ -166,8 +177,8 @@ int main() {
     signal(SIGINT, gameOver); // Signal handling for Ctrl + C
 
     getmaxyx(stdscr, MAXY, MAXX); // Get terminal size
-    MAXY -= 7; // Smallest numbers that work for me
-    MAXX -= 3;
+    MAXY -= 0;
+    MAXX -= 0;
 
     snakeLength = 5; // Initial length set to five characters
     direction = rand() % 4; // Random initial direction: 0-UP, 1-DOWN, 2-LEFT, 3-RIGHT
@@ -177,7 +188,12 @@ int main() {
     srand(time(NULL));
     trophy = generateTrophy();
 
+    // Shows score needed to win
     int halfPerimeter = (MAXY - 1) + (MAXX - 1); // Perimeter of the border
+    printw("Winning score: %d", halfPerimeter);
+    refresh();
+    sleep(1);
+    clear();
 
     drawStatic(); // Draw static elements at the start of the game
 
