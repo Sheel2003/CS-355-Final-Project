@@ -11,50 +11,6 @@ int snakeX[LENGTH], snakeY[LENGTH], snakeLength, trophy, trophyX, trophyY, MAXY,
 char direction;
 time_t trophyExpiration;
 
-void draw() {
-    clear();
-    printw("Welcome to the Snake Game!\n");
-    printw("Score: %d\n", snakeLength);
-    printw("Instructions:\n");
-    printw("Use arrow keys to control the snake.\n");
-    printw("Press 'Ctrl + C' to exit.\n");
-    printw("+"); // Top-left corner of border
-    for (int i = 0; i < MAXX; i++) printw("-");
-    printw("+\n");
-    for (int i = 0; i < MAXY; i++) {
-        printw("|"); // Left border
-        for (int j = 0; j < MAXX; j++) {
-            if (i == snakeX[0] && j == snakeY[0])
-                printw("0"); // Snake head
-            else if (i == trophyX && j == trophyY)
-                printw("%d", trophy); // Fruit
-            else {
-                int isSnakeBody = 0;
-                for (int k = 1; k < snakeLength; k++) {
-                    if (snakeX[k] == i && snakeY[k] == j) {
-                        printw("o"); // Snake body
-                        isSnakeBody = 1;
-                        break;
-                    }
-                }
-                if (!isSnakeBody)
-                    printw(" ");
-            }
-        }
-        printw("|\n"); // Right border
-    }
-    printw("+"); // Bottom-left corner of border
-    for (int i = 0; i < MAXX; i++) printw("-");
-    printw("+\n");
-    refresh();
-}
-
-void gameOver(int signal) {
-    endwin();
-    printf("Game Over! Final Score: %d\n", snakeLength);
-    exit(0);
-}
-
 int generateTrophy() {
     int newTrophy = (rand() % 9) + 1;
     int maxDistance = 15; // Maximum distance from the snake
@@ -69,6 +25,53 @@ int generateTrophy() {
     time(&currentTime);
     trophyExpiration = currentTime + (rand() % 9 + 1);
     return newTrophy;
+}
+
+void drawStatic() {
+    printw("Welcome to the Snake Game!\n");
+    printw("Score: %d\n", snakeLength);
+    printw("Instructions:\n");
+    printw("Use arrow keys to control the snake.\n");
+    printw("Press 'Ctrl + C' to exit.\n");
+    printw("+"); // Top-left corner of border
+    for (int i = 0; i < MAXX; i++) printw("-");
+    printw("+\n");
+    for (int i = 0; i < MAXY; i++) {
+        printw("|"); // Left border
+        for (int j = 0; j < MAXX; j++) {
+            printw(" ");
+        }
+        printw("|\n"); // Right border
+    }
+    printw("+"); // Bottom-left corner of border
+    for (int i = 0; i < MAXX; i++) printw("-");
+    printw("+\n");
+}
+
+void drawDynamic() {
+
+    // Draw the new trophy
+    mvprintw(trophyX, trophyY, "%d", trophy);
+
+    // Draw the new head of the snake
+    mvprintw(snakeX[0], snakeY[0], "0");
+
+    // Draw the new body of the snake
+    for (int i = 1; i < snakeLength; i++) {
+        mvprintw(snakeX[i], snakeY[i], "o");
+    }
+
+    // Draw the score
+    mvprintw(0, MAXX + 2, "Score: %d", snakeLength);
+
+    // Refresh the screen to apply changes
+    refresh();
+}
+
+void gameOver(int signal) {
+    endwin();
+    printf("Game Over! Final Score: %d\n", snakeLength);
+    exit(0);
 }
 
 void input() {
@@ -103,8 +106,8 @@ void input() {
     }
 }
 
-
 void moveSnake() {
+    mvprintw(snakeX[snakeLength - 1], snakeY[snakeLength - 1], " ");
     for (int i = snakeLength - 1; i > 0; i--) {
         snakeX[i] = snakeX[i - 1];
         snakeY[i] = snakeY[i - 1];
@@ -140,15 +143,16 @@ void checkCollision() {
     }
     // Checks if the snake collides with trophy
     if (snakeX[0] == trophyX && snakeY[0] == trophyY) {
-
         snakeLength += trophy;
         trophy = generateTrophy();
     }
-    // Checks if the trophy has been
+    // Checks if the trophy has expired
     time_t currentTime;
     time(&currentTime);
-    if (currentTime >= trophyExpiration)
+    if (currentTime >= trophyExpiration) {
+        mvprintw(trophyX, trophyY, " ");
         trophy = generateTrophy();
+    }
 }
 
 int main() {
@@ -175,18 +179,21 @@ int main() {
 
     int halfPerimeter = (MAXY - 1) + (MAXX - 1); // Perimeter of the border
 
+    drawStatic(); // Draw static elements at the start of the game
+
     while(1) {
-        draw();
+        drawDynamic(); // Draw dynamic elements (snake and trophies)
         input();
         moveSnake();
         checkCollision();
+        refresh();
         
         // Adjust snake speed based on its length
         int speed = halfPerimeter - snakeLength;
         if (speed > 20)
             timeout(speed);
         else
-         timeout(20);
+            timeout(20);
 
         if (snakeLength >= halfPerimeter){
             endwin();
