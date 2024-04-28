@@ -177,15 +177,17 @@ int main() {
     signal(SIGINT, gameOver); // Signal handling for Ctrl + C
 
     getmaxyx(stdscr, MAXY, MAXX); // Get terminal size
-    MAXY -= 0;
-    MAXX -= 0;
 
+    srand(time(NULL));
+    for (int i = 0; i < LENGTH; i++) {
+        snakeX[i] = -1;
+        snakeY[i] = -1;
+    }
     snakeLength = 5; // Initial length set to five characters
     direction = rand() % 4; // Random initial direction: 0-UP, 1-DOWN, 2-LEFT, 3-RIGHT
     snakeX[0] = MAXY / 2;
     snakeY[0] = MAXX / 2;
 
-    srand(time(NULL));
     trophy = generateTrophy();
 
     // Shows score needed to win
@@ -213,7 +215,7 @@ int main() {
 
         if (snakeLength >= halfPerimeter){
             endwin();
-            printf("You Win! Max Length Reached On Your Screen: %d\n", snakeLength);
+            printf("You Win! Max Length Reached On Your Screen: %d\n", halfPerimeter);
             exit(0);
         }
     }
