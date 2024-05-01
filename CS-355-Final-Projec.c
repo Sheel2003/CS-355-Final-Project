@@ -69,8 +69,8 @@ int generateTrophy() {
 void drawStatic() {
     printw("Welcome to the Snake Game!\n");
     printw("Score: %d\n", snakeLength);
-    printw("Instructions:\n");
-    printw("Use arrow keys to control the snake.\n");
+    printw("Winning score: %d\n", halfPerimeter);
+    printw("Press 'P' to pause the game.\n");
     printw("Press 'Ctrl + C' to exit.\n");
     printw("+"); // Top-left corner of border
     for (int i = 3; i < MAXX; i++)
@@ -118,10 +118,15 @@ void drawDynamic() {
 }
 
 void gameOver(int signal) {
-    endwin();
-    printf("Game Over! Final Score: %d\n", snakeLength);
+    clear(); // Clear the screen
+    mvprintw(MAXY / 2, (MAXX - 18) / 2, "You lost! Final Score: %d", snakeLength);
+    refresh(); // Refresh the screen to show the message
+    napms(5000); // Delay for 5 sec
+    endwin(); // End curses mode
     exit(0);
 }
+
+
 
 void input() {
     int ch = getch(); // Use int instead of char to handle arrow keys
@@ -293,7 +298,7 @@ void checkCollision() {
 
             int speed = halfPerimeter - snakeLength;
             if (speed > 20)
-                usleep(speed * 1000); // Convert speed to microseconds
+                usleep(speed * 2000); // Convert speed to microseconds
             else
                 usleep(20 * 1000); // Convert 20 milliseconds to microseconds
 
@@ -360,7 +365,7 @@ int main() {
 
     // Shows score needed to win
     halfPerimeter = (MAXY - 1) + (MAXX - 1); // Perimeter of the border
-    printw("Winning score: %d", halfPerimeter);
+    printw("To win the game, you'll need to reach a score of: %d", halfPerimeter);
     refresh();
     sleep(1);
     clear();
