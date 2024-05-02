@@ -150,7 +150,7 @@ void gameOver(int signal) {
     clear(); // Clear the screen
     mvprintw(MAXY / 2, (MAXX - 18) / 2, "You lost! Final Score: %d", snake.length);
     refresh(); // Refresh the screen to show the message
-    usleep(5000); // Delay for 5 sec
+    usleep(5000000); // Delay for 5 sec
     endwin(); // End curses mode
     exit(0);
 }
