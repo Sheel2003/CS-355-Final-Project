@@ -248,8 +248,8 @@ void checkCollision() {
                 snake.invincible = false;
                 break; // Exit the loop if power-up expires
             }
-            gameloop();
-            }
+        }
+        gameloop();
         }
     }
 }
